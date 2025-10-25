@@ -4,18 +4,18 @@ Este guia detalha como fazer o deploy do projeto Shorts Viral no Easypanel.
 
 ## 📋 Pré-requisitos
 
-1. **Conta Supabase configurada**
-   - Criar projeto no Supabase
-   - Criar bucket de storage chamado `shorts-images`
-   - Configurar políticas de acesso público
+1. **Servidor N8N ou API de Webhooks**
+   - URL base da API configurada (ex: https://n8n.automear.com)
+   - Endpoint `/webhook/gerarShorts` implementado
+   - **IMPORTANTE:** Servidor deve aceitar CORS de sua origem
 
-2. **Servidor N8N ou API de Webhooks**
-   - URL base da API configurada
-   - Endpoint `/webhook/geraShorts` implementado
-
-3. **Conta no Easypanel/VPS**
+2. **Conta no Easypanel/VPS**
    - Acesso ao painel Easypanel
    - Repositório GitHub com o código
+
+3. **Opcional: Conta Supabase** (para autenticação futura)
+   - Criar projeto no Supabase
+   - Configurar autenticação (opcional)
 
 ## 🚀 Passos para Deploy
 
