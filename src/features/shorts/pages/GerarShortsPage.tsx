@@ -59,9 +59,12 @@ export default function GerarShortsPage() {
 
       const imageBase64 = await base64Promise
 
+      // Remove o prefixo "data:image/...;base64," e envia apenas o código base64
+      const base64Only = imageBase64.split(',')[1] || imageBase64
+
       // Enviar para o webhook de geração
       const payload = {
-        imagem_base64: imageBase64,
+        imagem_base64: base64Only,
         imagem_nome: selectedFile.name,
         user_id: userId,
         opcoes: {
