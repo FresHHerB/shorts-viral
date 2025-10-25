@@ -1,0 +1,32 @@
+{
+  "name": "shorts-viral",
+  "services": [
+    {
+      "type": "app",
+      "data": {
+        "name": "shorts-viral",
+        "source": {
+          "type": "github",
+          "repo": "YOUR_USERNAME/shorts-viral",
+          "branch": "main"
+        },
+        "build": {
+          "type": "dockerfile",
+          "dockerfile": "Dockerfile"
+        },
+        "env": [
+          {
+            "name": "NODE_ENV",
+            "value": "production"
+          }
+        ],
+        "ports": [
+          {
+            "published": 80,
+            "target": 80
+          }
+        ]
+      }
+    }
+  ]
+}
