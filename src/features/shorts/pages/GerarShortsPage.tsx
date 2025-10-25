@@ -6,6 +6,12 @@ import { supabase } from '@shared/lib/supabase'
 
 type StatusType = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 
+interface GeneratedResult {
+  positivePrompt: string
+  negativePrompt: string
+  image_url: string
+}
+
 export default function GerarShortsPage() {
   const { user, signOut } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -13,6 +19,7 @@ export default function GerarShortsPage() {
   const [status, setStatus] = useState<StatusType>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [generatedResult, setGeneratedResult] = useState<GeneratedResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +42,7 @@ export default function GerarShortsPage() {
     setPreviewUrl(URL.createObjectURL(file))
     setErrorMessage('')
     setSuccessMessage('')
+    setGeneratedResult(null)
     setStatus('idle')
   }
 
@@ -75,16 +83,16 @@ export default function GerarShortsPage() {
 
       const result = await apiService.gerarShorts(payload)
 
-      setStatus('success')
-      setSuccessMessage('Short gerado com sucesso! O vídeo estará pronto em breve.')
-
-      // Limpar após 3 segundos
-      setTimeout(() => {
-        setSelectedFile(null)
-        setPreviewUrl(null)
-        setStatus('idle')
-        setSuccessMessage('')
-      }, 3000)
+      // Processar resposta do webhook
+      // Espera array: [{ positivePrompt, negativePrompt, image_url }]
+      if (Array.isArray(result) && result.length > 0) {
+        const firstResult = result[0]
+        setGeneratedResult(firstResult)
+        setStatus('success')
+        setSuccessMessage('Short gerado com sucesso!')
+      } else {
+        throw new Error('Resposta inesperada do servidor')
+      }
 
     } catch (error: any) {
       console.error('Erro ao processar:', error)
@@ -215,6 +223,41 @@ export default function GerarShortsPage() {
             <div className="mt-6 bg-green-500/10 border border-green-500 rounded-lg p-4 flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
               <p className="text-green-500 text-sm">{successMessage}</p>
+            </div>
+          )}
+
+          {/* Generated Results */}
+          {generatedResult && (
+            <div className="mt-6 bg-gray-900 border border-gray-700 rounded-xl p-6 space-y-6">
+              <h3 className="text-xl font-semibold text-white mb-4">Resultado Gerado</h3>
+
+              {/* Generated Image */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Imagem Gerada</label>
+                <div className="relative w-full aspect-video bg-gray-800 rounded-lg overflow-hidden">
+                  <img
+                    src={generatedResult.image_url}
+                    alt="Imagem gerada"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              {/* Positive Prompt */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Prompt Positivo</label>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.positivePrompt}</p>
+                </div>
+              </div>
+
+              {/* Negative Prompt */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Prompt Negativo</label>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.negativePrompt}</p>
+                </div>
+              </div>
             </div>
           )}
 
