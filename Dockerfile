@@ -5,16 +5,9 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Permite injetar variáveis via build-args (Vite lê VITE_* no build)
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
-ARG VITE_API_BASE_URL
-ARG VITE_WEBHOOK_GERA_SHORTS
-
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_WEBHOOK_GERA_SHORTS=$VITE_WEBHOOK_GERA_SHORTS
+# Use .env.production para o build
+# Vite automaticamente lê .env.production em production mode
+RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
 RUN npm run build
 
