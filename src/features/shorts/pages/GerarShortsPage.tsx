@@ -39,41 +39,32 @@ export default function GerarShortsPage() {
   }
 
   const handleUploadAndGenerate = async () => {
-    if (!selectedFile || !user) return
+    if (!selectedFile) return
+
+    // BYPASS TEMPORÁRIO: Use test-user se não houver autenticação
+    const userId = user?.id || 'test-user'
 
     try {
-      setStatus('uploading')
+      setStatus('processing')
       setErrorMessage('')
       setSuccessMessage('')
 
-      // 1. Upload da imagem para o Supabase Storage
-      const fileExt = selectedFile.name.split('.').pop()
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`
+      // Converter imagem para base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(selectedFile)
+      })
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('shorts-images')
-        .upload(fileName, selectedFile, {
-          cacheControl: '3600',
-          upsert: false
-        })
+      const imageBase64 = await base64Promise
 
-      if (uploadError) {
-        throw new Error(`Erro ao fazer upload: ${uploadError.message}`)
-      }
-
-      // 2. Obter URL pública da imagem
-      const { data: { publicUrl } } = supabase.storage
-        .from('shorts-images')
-        .getPublicUrl(fileName)
-
-      // 3. Enviar para o webhook de geração
-      setStatus('processing')
-
+      // Enviar para o webhook de geração
       const payload = {
-        imagem_url: publicUrl,
-        user_id: user.id,
+        imagem_base64: imageBase64,
+        imagem_nome: selectedFile.name,
+        user_id: userId,
         opcoes: {
-          // Adicione opções personalizadas aqui
           estilo: 'viral',
           duracao: 30,
         }
