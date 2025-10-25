@@ -4,7 +4,11 @@
       "Read(//d/code/freela/autodark/**)",
       "Bash(tree:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: implementação inicial do Shorts Viral\n\n- Estrutura completa do projeto React + TypeScript\n- Sistema de autenticação com Supabase\n- Página de upload de imagem com drag & drop\n- Integração com webhook /geraShorts para processamento\n- Upload automático para Supabase Storage\n- Interface moderna com TailwindCSS\n- Deploy otimizado para Easypanel via Dockerfile\n- Documentação completa (README, DEPLOYMENT, WEBHOOK, QUICKSTART)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
