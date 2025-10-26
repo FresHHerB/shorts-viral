@@ -290,9 +290,9 @@ export default function GerarShortsPage() {
             </div>
 
           {/* Dynamic Layout - Horizontal Flow */}
-          <div className="flex-1 flex flex-col lg:flex-row gap-4 mb-4 min-h-0">
+          <div className="flex-1 flex flex-col lg:flex-row gap-4 mb-4 min-h-0 justify-center">
             {/* Upload Area - Always visible */}
-            <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+            <div className="flex flex-col min-h-0 h-full">
               <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0">Upload</h3>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -300,7 +300,7 @@ export default function GerarShortsPage() {
                 onDrop={handleDrop}
                 className={`
                   relative border-2 border-dashed rounded-xl flex-1 flex items-center justify-center cursor-pointer
-                  transition-all duration-200 overflow-hidden
+                  transition-all duration-200 overflow-hidden aspect-[9/16]
                   ${previewUrl
                     ? 'border-blue-500 bg-blue-500/5'
                     : 'border-gray-600 hover:border-gray-500 bg-gray-700/30'
@@ -353,9 +353,9 @@ export default function GerarShortsPage() {
 
             {/* Generated Image - Visible when result exists */}
             {generatedResult && (
-              <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+              <div className="flex flex-col min-h-0 h-full">
                 <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0">Imagem Gerada</h3>
-                <div className="border-2 border-green-500 rounded-xl flex-1 flex items-center justify-center bg-gray-900 overflow-hidden">
+                <div className="border-2 border-green-500 rounded-xl flex-1 flex items-center justify-center bg-gray-900 overflow-hidden aspect-[9/16]">
                   <img
                     src={generatedResult.image_url}
                     alt="Imagem gerada"
@@ -425,7 +425,7 @@ export default function GerarShortsPage() {
 
             {/* Video Section - Loading or Ready */}
             {(isGeneratingVideo || videoUrl) && (
-              <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+              <div className="flex flex-col min-h-0 h-full">
                 <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0 flex items-center gap-2">
                   {videoUrl ? (
                     <>
@@ -436,7 +436,7 @@ export default function GerarShortsPage() {
                     'Processando Vídeo'
                   )}
                 </h3>
-                <div className={`border-2 rounded-xl flex-1 flex flex-col overflow-hidden ${
+                <div className={`border-2 rounded-xl flex-1 flex flex-col overflow-hidden aspect-[9/16] ${
                   videoUrl ? 'border-green-500 bg-gray-900' : 'border-blue-500 bg-blue-500/5'
                 }`}>
                   {videoUrl ? (
