@@ -2,7 +2,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const WEBHOOK_GERA_SHORTS = import.meta.env.VITE_WEBHOOK_GERA_SHORTS
 
 export interface GerarShortsPayload {
-  imagem_url: string
+  generation_type: 'imagem' | 'video'
+  task_uuid?: string // Para rastreamento de vídeo
+  imagem_base64?: string // Para geração de imagem
+  imagem_nome?: string // Nome do arquivo de imagem
+  video_description?: string // Para geração de vídeo
+  image_url?: string // URL da imagem gerada
   user_id: string
   opcoes?: {
     estilo?: string
