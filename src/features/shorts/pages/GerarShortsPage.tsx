@@ -256,9 +256,9 @@ export default function GerarShortsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
       {/* Header */}
-      <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
+      <header className="flex-shrink-0 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <ImageIcon className="w-8 h-8 text-blue-500" />
@@ -277,28 +277,29 @@ export default function GerarShortsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Gerar Short Viral
-            </h2>
-            <p className="text-gray-400">
-              Faça upload de uma imagem para gerar seu vídeo viral
-            </p>
-          </div>
+      <main className="flex-1 overflow-hidden">
+        <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="h-full bg-gray-800 rounded-2xl shadow-2xl p-6 flex flex-col">
+            <div className="text-center mb-4 flex-shrink-0">
+              <h2 className="text-2xl font-bold text-white mb-1">
+                Gerar Short Viral
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Faça upload de uma imagem para gerar seu vídeo viral
+              </p>
+            </div>
 
           {/* Dynamic Layout - Horizontal Flow */}
-          <div className="flex flex-col lg:flex-row gap-6 mb-8">
+          <div className="flex-1 flex flex-col lg:flex-row gap-4 mb-4 min-h-0">
             {/* Upload Area - Always visible */}
-            <div className="flex-shrink-0 w-full lg:w-80">
-              <h3 className="text-lg font-semibold text-white mb-4">Upload</h3>
+            <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+              <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0">Upload</h3>
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 className={`
-                  relative border-2 border-dashed rounded-xl min-h-[500px] max-h-[500px] flex items-center justify-center cursor-pointer
+                  relative border-2 border-dashed rounded-xl flex-1 flex items-center justify-center cursor-pointer
                   transition-all duration-200 overflow-hidden
                   ${previewUrl
                     ? 'border-blue-500 bg-blue-500/5'
@@ -352,9 +353,9 @@ export default function GerarShortsPage() {
 
             {/* Generated Image - Visible when result exists */}
             {generatedResult && (
-              <div className="flex-shrink-0 w-full lg:w-80">
-                <h3 className="text-lg font-semibold text-white mb-4">Imagem Gerada</h3>
-                <div className="border-2 border-green-500 rounded-xl min-h-[500px] max-h-[500px] flex items-center justify-center bg-gray-900 overflow-hidden">
+              <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+                <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0">Imagem Gerada</h3>
+                <div className="border-2 border-green-500 rounded-xl flex-1 flex items-center justify-center bg-gray-900 overflow-hidden">
                   <img
                     src={generatedResult.image_url}
                     alt="Imagem gerada"
@@ -366,9 +367,9 @@ export default function GerarShortsPage() {
 
             {/* Control Panel - Visible when result exists */}
             {generatedResult && (
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-white mb-4">Controles</h3>
-                <div className="space-y-4">
+              <div className="flex-1 min-w-0 flex flex-col min-h-0">
+                <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0">Controles</h3>
+                <div className="flex-1 space-y-3 overflow-y-auto">
                   {/* Prompt Section */}
                   <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
                     <label className="text-xs font-medium text-gray-400 block mb-2">Prompt Positivo</label>
@@ -422,123 +423,115 @@ export default function GerarShortsPage() {
               </div>
             )}
 
-            {/* Video Loading - Visible when generating */}
-            {isGeneratingVideo && !videoUrl && (
-              <div className="flex-shrink-0 w-full lg:w-80">
-                <h3 className="text-lg font-semibold text-white mb-4">Processando Vídeo</h3>
-                <div className="border-2 border-blue-500 rounded-xl min-h-[500px] max-h-[500px] flex items-center justify-center bg-blue-500/5 p-6">
-                  <div className="text-center">
-                    <Loader2 className="w-16 h-16 mx-auto text-blue-500 animate-spin mb-4" />
-                    <p className="text-blue-400 text-sm font-medium mb-2">
-                      Gerando vídeo...
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      Isso pode levar alguns minutos
-                    </p>
-                  </div>
+            {/* Video Section - Loading or Ready */}
+            {(isGeneratingVideo || videoUrl) && (
+              <div className="flex-shrink-0 w-full lg:w-80 flex flex-col min-h-0">
+                <h3 className="text-base font-semibold text-white mb-2 flex-shrink-0 flex items-center gap-2">
+                  {videoUrl ? (
+                    <>
+                      <Video className="w-5 h-5 text-green-500" />
+                      Vídeo Pronto
+                    </>
+                  ) : (
+                    'Processando Vídeo'
+                  )}
+                </h3>
+                <div className={`border-2 rounded-xl flex-1 flex flex-col overflow-hidden ${
+                  videoUrl ? 'border-green-500 bg-gray-900' : 'border-blue-500 bg-blue-500/5'
+                }`}>
+                  {videoUrl ? (
+                    <>
+                      {/* Video Player */}
+                      <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+                        <video
+                          src={videoUrl}
+                          controls
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 p-3 bg-gray-800 border-t border-gray-700">
+                        <a
+                          href={videoUrl}
+                          download
+                          className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold text-center transition-colors"
+                        >
+                          Download
+                        </a>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(videoUrl)
+                            setSuccessMessage('URL copiada!')
+                          }}
+                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          Copiar URL
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center flex-1 p-6">
+                      <div className="text-center">
+                        <Loader2 className="w-16 h-16 mx-auto text-blue-500 animate-spin mb-4" />
+                        <p className="text-blue-400 text-sm font-medium mb-2">
+                          Gerando vídeo...
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          Isso pode levar alguns minutos
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="mb-6 bg-red-500/10 border border-red-500 rounded-lg p-4 flex items-center gap-3">
-              <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-500 text-sm">{errorMessage}</p>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-6 bg-green-500/10 border border-green-500 rounded-lg p-4 flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-              <p className="text-green-500 text-sm">{successMessage}</p>
-            </div>
-          )}
-
-          {/* Generate Image Button - Only when no result */}
-          {selectedFile && !generatedResult && (
-            <button
-              onClick={handleGenerateImage}
-              disabled={status === 'processing'}
-              className={`
-                w-full mb-6 py-4 px-6 rounded-xl font-semibold text-white
-                transition-all duration-200 flex items-center justify-center gap-2
-                ${status === 'processing'
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                }
-              `}
-            >
-              {status === 'processing' ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Gerando imagem...
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="w-5 h-5" />
-                  Gerar Imagem
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Seção: Vídeo Gerado */}
-          {videoUrl && (
-            <div className="mb-6 bg-gray-900 border border-green-500 rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Video className="w-6 h-6 text-green-500" />
-                Vídeo Gerado
-              </h3>
-
-              {/* Video Player */}
-              <div className="bg-black rounded-lg overflow-hidden mb-4">
-                <video
-                  src={videoUrl}
-                  controls
-                  className="w-full rounded-lg"
-                  style={{ maxHeight: '600px' }}
-                />
+          {/* Messages and Buttons - Fixed at bottom */}
+          <div className="flex-shrink-0 space-y-3">
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="bg-red-500/10 border border-red-500 rounded-lg p-3 flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                <p className="text-red-500 text-xs">{errorMessage}</p>
               </div>
+            )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <a
-                  href={videoUrl}
-                  download
-                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-center transition-colors"
-                >
-                  Download
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(videoUrl)
-                    setSuccessMessage('URL copiada para a área de transferência!')
-                  }}
-                  className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Copiar URL
-                </button>
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-500/10 border border-green-500 rounded-lg p-3 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <p className="text-green-500 text-xs">{successMessage}</p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-gray-700">
-            <div className="text-center">
-              <div className="text-blue-500 font-bold text-2xl mb-1">1</div>
-              <p className="text-gray-400 text-sm">Escolha uma imagem</p>
-            </div>
-            <div className="text-center">
-              <div className="text-blue-500 font-bold text-2xl mb-1">2</div>
-              <p className="text-gray-400 text-sm">Clique em gerar</p>
-            </div>
-            <div className="text-center">
-              <div className="text-blue-500 font-bold text-2xl mb-1">3</div>
-              <p className="text-gray-400 text-sm">Aguarde o processamento</p>
-            </div>
+            {/* Generate Image Button - Only when no result */}
+            {selectedFile && !generatedResult && (
+              <button
+                onClick={handleGenerateImage}
+                disabled={status === 'processing'}
+                className={`
+                  w-full py-3 px-6 rounded-xl font-semibold text-white text-sm
+                  transition-all duration-200 flex items-center justify-center gap-2
+                  ${status === 'processing'
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                  }
+                `}
+              >
+                {status === 'processing' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Gerando imagem...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4" />
+                    Gerar Imagem
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </main>
