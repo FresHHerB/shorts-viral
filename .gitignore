@@ -31,3 +31,7 @@ package-lock.json
 .env.local
 .env.production.local
 .env.development.local
+
+# Test images and videos
+images/
+test-image.jpg
