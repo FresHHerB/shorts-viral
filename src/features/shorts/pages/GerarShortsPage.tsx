@@ -534,7 +534,8 @@ export default function GerarShortsPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
+  </div>
   )
 }
