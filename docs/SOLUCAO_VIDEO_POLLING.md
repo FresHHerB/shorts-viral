@@ -1,4 +1,4 @@
-# Solução de Polling para Exibição de Vídeo Gerado
+# Solução de Realtime para Exibição de Vídeo Gerado
 
 ## Problema
 
@@ -8,7 +8,7 @@ O Runware Video Inference é **assíncrono**: você faz um POST e ele retorna im
 
 ---
 
-## Solução: n8n como Ponte + Polling Inteligente
+## Solução: n8n como Ponte + Supabase Realtime
 
 ### Fluxo Completo
 
@@ -55,11 +55,11 @@ O Runware Video Inference é **assíncrono**: você faz um POST e ele retorna im
 │             │    VALUES ('abc-123', 'https://...', 'completed')
 └─────────────┘
        │
-       ↓ (Frontend estava fazendo polling)
+       ↓ (Frontend estava inscrito no Realtime)
 
 ┌─────────────┐
-│  Frontend   │ 8. Polling detecta vídeo pronto
-│             │ 9. Exibe videoURL na tela!
+│  Frontend   │ 8. Recebe notificação automática
+│             │ 9. Exibe videoURL na tela instantaneamente!
 └─────────────┘
 ```
 
@@ -161,7 +161,19 @@ Body:
 
 ---
 
-### 3. Frontend - Modificações
+### 3. Habilitar Realtime no Supabase
+
+Execute no SQL Editor do Supabase:
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE shorts_generation;
+```
+
+Ou execute o arquivo: `supabase/migrations/20250126_enable_realtime.sql`
+
+---
+
+### 4. Frontend - Modificações
 
 #### Instalar dependência:
 
@@ -179,7 +191,7 @@ import { supabase } from '@shared/lib/supabase'
 // Adicionar ao estado
 const [videoUrl, setVideoUrl] = useState<string | null>(null)
 const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
-const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+const channelRef = useRef<any>(null)
 
 // Modificar handleGenerateVideo
 const handleGenerateVideo = async () => {
@@ -211,8 +223,8 @@ const handleGenerateVideo = async () => {
 
     setSuccessMessage('Vídeo enviado para geração! Aguardando processamento...')
 
-    // ⭐ Iniciar polling
-    startVideoPolling(taskUuid)
+    // ⭐ Iniciar Realtime listener
+    startVideoRealtime(taskUuid)
 
   } catch (error: any) {
     console.error('Erro ao processar:', error)
@@ -222,61 +234,91 @@ const handleGenerateVideo = async () => {
   }
 }
 
-// Função de polling
-const startVideoPolling = (taskUuid: string) => {
-  let attempts = 0
-  const maxAttempts = 60 // 10 minutos (10s * 60)
+// Função Realtime
+const startVideoRealtime = async (taskUuid: string) => {
+  // 1. Buscar status inicial (caso já esteja pronto)
+  try {
+    const { data: initialData } = await supabase
+      .from('shorts_generation')
+      .select('status, video_url, error_message')
+      .eq('id', taskUuid)
+      .single()
 
-  pollingIntervalRef.current = setInterval(async () => {
-    attempts++
-
-    try {
-      const { data, error } = await supabase
-        .from('video_generations')
-        .select('status, video_url, error_message')
-        .eq('id', taskUuid)
-        .single()
-
-      if (error) {
-        console.log('Aguardando vídeo...', attempts)
-        return
-      }
-
-      if (data?.status === 'completed' && data.video_url) {
-        // ✅ Vídeo pronto!
-        setVideoUrl(data.video_url)
-        setStatus('success')
-        setIsGeneratingVideo(false)
-        setSuccessMessage('Vídeo gerado com sucesso!')
-        stopPolling()
-      } else if (data?.status === 'error') {
-        setStatus('error')
-        setIsGeneratingVideo(false)
-        setErrorMessage(data.error_message || 'Erro ao gerar vídeo')
-        stopPolling()
-      } else if (attempts >= maxAttempts) {
-        // Timeout
-        setStatus('error')
-        setIsGeneratingVideo(false)
-        setErrorMessage('Tempo esgotado. O vídeo pode ainda estar sendo processado.')
-        stopPolling()
-      }
-    } catch (err) {
-      console.error('Erro no polling:', err)
+    if (initialData?.status === 'completed' && initialData.video_url) {
+      // ✅ Já está pronto!
+      setVideoUrl(initialData.video_url)
+      setStatus('success')
+      setIsGeneratingVideo(false)
+      setSuccessMessage('Vídeo gerado com sucesso!')
+      return
+    } else if (initialData?.status === 'error') {
+      setStatus('error')
+      setIsGeneratingVideo(false)
+      setErrorMessage(initialData.error_message || 'Erro ao gerar vídeo')
+      return
     }
-  }, 10000) // Verificar a cada 10 segundos
+  } catch (err) {
+    console.error('Erro ao buscar status inicial:', err)
+  }
+
+  // 2. Inscrever para receber atualizações em tempo real
+  const channel = supabase
+    .channel(`video_generation_${taskUuid}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'shorts_generation',
+        filter: `id=eq.${taskUuid}`
+      },
+      (payload) => {
+        console.log('🔔 Realtime update recebido:', payload)
+        const data = payload.new as any
+
+        if (data.status === 'completed' && data.video_url) {
+          // ✅ Vídeo pronto!
+          setVideoUrl(data.video_url)
+          setStatus('success')
+          setIsGeneratingVideo(false)
+          setSuccessMessage('Vídeo gerado com sucesso!')
+          stopRealtime()
+        } else if (data.status === 'error') {
+          setStatus('error')
+          setIsGeneratingVideo(false)
+          setErrorMessage(data.error_message || 'Erro ao gerar vídeo')
+          stopRealtime()
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('📡 Realtime subscription status:', status)
+    })
+
+  channelRef.current = channel
+
+  // 3. Timeout de segurança (10 minutos)
+  setTimeout(() => {
+    if (isGeneratingVideo) {
+      setStatus('error')
+      setIsGeneratingVideo(false)
+      setErrorMessage('Tempo esgotado. O vídeo pode ainda estar sendo processado.')
+      stopRealtime()
+    }
+  }, 600000) // 10 minutos
 }
 
-const stopPolling = () => {
-  if (pollingIntervalRef.current) {
-    clearInterval(pollingIntervalRef.current)
-    pollingIntervalRef.current = null
+const stopRealtime = () => {
+  if (channelRef.current) {
+    console.log('🔌 Desconectando Realtime...')
+    channelRef.current.unsubscribe()
+    channelRef.current = null
   }
 }
 
-// Limpar polling ao desmontar componente
+// Limpar Realtime ao desmontar componente
 useEffect(() => {
-  return () => stopPolling()
+  return () => stopRealtime()
 }, [])
 ```
 
@@ -347,11 +389,11 @@ export interface GerarShortsPayload {
 
 ## Vantagens desta Solução
 
+✅ **Instantâneo:** Vídeo aparece em <1s após ficar pronto
+✅ **Eficiente:** Apenas 1 requisição inicial + notificação automática
+✅ **Econômico:** Não faz requisições repetidas (polling)
 ✅ **Simples:** Apenas 1 tabela no Supabase e 2 webhooks no n8n
-✅ **Sem dependências complexas:** Não precisa de WebSockets ou Realtime
-✅ **Funciona na mesma página:** Usuário vê o vídeo aparecer automaticamente
-✅ **Timeout inteligente:** Para de tentar após 10 minutos
-✅ **Leve:** Polling a cada 10s (muito leve para o Supabase)
+✅ **Timeout inteligente:** Para de escutar após 10 minutos
 ✅ **Resiliente:** Se der erro, mostra mensagem clara
 
 ---
@@ -360,6 +402,7 @@ export interface GerarShortsPayload {
 
 ⚠️ **Usuário precisa manter a página aberta** durante a geração (2-5 min)
 ⚠️ **Se fechar a página:** Vídeo fica salvo no Supabase, mas precisa criar página "Meus Vídeos" para ver depois
+⚠️ **Requer Realtime habilitado:** Precisa executar `ALTER PUBLICATION` no Supabase
 
 ---
 
