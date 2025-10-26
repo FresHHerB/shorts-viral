@@ -178,7 +178,7 @@ export default function GerarShortsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">
@@ -189,66 +189,92 @@ export default function GerarShortsPage() {
             </p>
           </div>
 
-          {/* Upload Area */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            className={`
-              relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
-              transition-all duration-200
-              ${previewUrl
-                ? 'border-blue-500 bg-blue-500/5'
-                : 'border-gray-600 hover:border-gray-500 bg-gray-700/30'
-              }
-            `}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-
-            {previewUrl ? (
-              <div className="space-y-4">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-64 mx-auto rounded-lg shadow-lg"
+          {/* Images Grid - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Upload Area */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Imagem de Upload</h3>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className={`
+                  relative border-2 border-dashed rounded-xl h-full min-h-[400px] flex items-center justify-center cursor-pointer
+                  transition-all duration-200
+                  ${previewUrl
+                    ? 'border-blue-500 bg-blue-500/5'
+                    : 'border-gray-600 hover:border-gray-500 bg-gray-700/30'
+                  }
+                `}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
                 />
-                <p className="text-gray-300 font-medium">{selectedFile?.name}</p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedFile(null)
-                    setPreviewUrl(null)
-                    setStatus('idle')
-                  }}
-                  className="text-sm text-gray-400 hover:text-gray-300 underline"
-                >
-                  Escolher outra imagem
-                </button>
+
+                {previewUrl ? (
+                  <div className="p-6 w-full h-full flex flex-col">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                    <p className="text-gray-300 font-medium text-center mt-4">{selectedFile?.name}</p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedFile(null)
+                        setPreviewUrl(null)
+                        setGeneratedResult(null)
+                        setStatus('idle')
+                      }}
+                      className="text-sm text-gray-400 hover:text-gray-300 underline mt-2"
+                    >
+                      Escolher outra imagem
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center p-12">
+                    <Upload className="w-16 h-16 mx-auto text-gray-500 mb-4" />
+                    <p className="text-lg text-gray-300 font-medium mb-1">
+                      Clique ou arraste uma imagem
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      PNG, JPG, GIF até 10MB
+                    </p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="space-y-4">
-                <Upload className="w-16 h-16 mx-auto text-gray-500" />
-                <div>
-                  <p className="text-lg text-gray-300 font-medium mb-1">
-                    Clique ou arraste uma imagem
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    PNG, JPG, GIF até 10MB
-                  </p>
-                </div>
+            </div>
+
+            {/* Generated Image */}
+            <div className={generatedResult ? '' : 'hidden lg:block'}>
+              <h3 className="text-lg font-semibold text-white mb-4">Imagem Gerada</h3>
+              <div className="border-2 border-gray-700 rounded-xl h-full min-h-[400px] flex items-center justify-center bg-gray-900">
+                {generatedResult ? (
+                  <img
+                    src={generatedResult.image_url}
+                    alt="Imagem gerada"
+                    className="w-full h-full object-contain rounded-lg p-6"
+                  />
+                ) : (
+                  <div className="text-center p-12">
+                    <ImageIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                    <p className="text-gray-500">
+                      A imagem gerada aparecerá aqui
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="mt-6 bg-red-500/10 border border-red-500 rounded-lg p-4 flex items-center gap-3">
+            <div className="mb-6 bg-red-500/10 border border-red-500 rounded-lg p-4 flex items-center gap-3">
               <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
               <p className="text-red-500 text-sm">{errorMessage}</p>
             </div>
@@ -256,78 +282,19 @@ export default function GerarShortsPage() {
 
           {/* Success Message */}
           {successMessage && (
-            <div className="mt-6 bg-green-500/10 border border-green-500 rounded-lg p-4 flex items-center gap-3">
+            <div className="mb-6 bg-green-500/10 border border-green-500 rounded-lg p-4 flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
               <p className="text-green-500 text-sm">{successMessage}</p>
             </div>
           )}
 
-          {/* Generated Results */}
-          {generatedResult && (
-            <div className="mt-6 bg-gray-900 border border-gray-700 rounded-xl p-6 space-y-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Resultado Gerado</h3>
-
-              {/* Generated Image */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Imagem Gerada</label>
-                <div className="relative w-full aspect-video bg-gray-800 rounded-lg overflow-hidden">
-                  <img
-                    src={generatedResult.image_url}
-                    alt="Imagem gerada"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
-
-              {/* Positive Prompt */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Prompt Positivo</label>
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.positivePrompt}</p>
-                </div>
-              </div>
-
-              {/* Video Description */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Descrição do Vídeo</label>
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.video_description}</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <button
-                  onClick={handleGenerateImage}
-                  disabled={status === 'processing'}
-                  className="py-3 px-6 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                  <ImageIcon className="w-5 h-5" />
-                  Gerar Nova Imagem
-                </button>
-                <button
-                  onClick={handleGenerateVideo}
-                  disabled={status === 'processing'}
-                  className="py-3 px-6 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                  {status === 'processing' ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Upload className="w-5 h-5" />
-                  )}
-                  Gerar Vídeo
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Generate Button */}
+          {/* Generate Image Button - Only when no result */}
           {selectedFile && !generatedResult && (
             <button
               onClick={handleGenerateImage}
               disabled={status === 'processing'}
               className={`
-                w-full mt-6 py-4 px-6 rounded-xl font-semibold text-white
+                w-full mb-6 py-4 px-6 rounded-xl font-semibold text-white
                 transition-all duration-200 flex items-center justify-center gap-2
                 ${status === 'processing'
                   ? 'bg-gray-600 cursor-not-allowed'
@@ -347,6 +314,74 @@ export default function GerarShortsPage() {
                 </>
               )}
             </button>
+          )}
+
+          {/* Seção: Geração de Imagem */}
+          {generatedResult && (
+            <div className="mb-6 bg-gray-900 border border-gray-700 rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">Geração de Imagem</h3>
+
+              {/* Positive Prompt */}
+              <div className="space-y-2 mb-4">
+                <label className="text-sm font-medium text-gray-400">Prompt Positivo</label>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 max-h-48 overflow-y-auto">
+                  <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{generatedResult.positivePrompt}</p>
+                </div>
+              </div>
+
+              {/* Generate New Image Button */}
+              <button
+                onClick={handleGenerateImage}
+                disabled={status === 'processing'}
+                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {status === 'processing' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-5 h-5" />
+                    Gerar Nova Imagem
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Seção: Geração de Vídeo */}
+          {generatedResult && (
+            <div className="mb-6 bg-gray-900 border border-gray-700 rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">Geração de Vídeo</h3>
+
+              {/* Video Description */}
+              <div className="space-y-2 mb-4">
+                <label className="text-sm font-medium text-gray-400">Descrição do Vídeo</label>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 max-h-48 overflow-y-auto">
+                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.video_description}</p>
+                </div>
+              </div>
+
+              {/* Generate Video Button */}
+              <button
+                onClick={handleGenerateVideo}
+                disabled={status === 'processing'}
+                className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {status === 'processing' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Gerando vídeo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5" />
+                    Gerar Vídeo
+                  </>
+                )}
+              </button>
+            </div>
           )}
 
           {/* Info Cards */}
