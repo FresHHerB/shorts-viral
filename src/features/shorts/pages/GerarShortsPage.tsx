@@ -8,7 +8,7 @@ type StatusType = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 
 interface GeneratedResult {
   positivePrompt: string
-  negativePrompt: string
+  video_description: string
   image_url: string
 }
 
@@ -46,7 +46,7 @@ export default function GerarShortsPage() {
     setStatus('idle')
   }
 
-  const handleUploadAndGenerate = async () => {
+  const handleGenerateImage = async () => {
     if (!selectedFile) return
 
     // BYPASS TEMPORÁRIO: Use test-user se não houver autenticação
@@ -70,8 +70,9 @@ export default function GerarShortsPage() {
       // Remove o prefixo "data:image/...;base64," e envia apenas o código base64
       const base64Only = imageBase64.split(',')[1] || imageBase64
 
-      // Enviar para o webhook de geração
+      // Enviar para o webhook de geração de imagem
       const payload = {
+        generation_type: 'imagem',
         imagem_base64: base64Only,
         imagem_nome: selectedFile.name,
         user_id: userId,
@@ -84,12 +85,12 @@ export default function GerarShortsPage() {
       const result = await apiService.gerarShorts(payload)
 
       // Processar resposta do webhook
-      // Espera array: [{ positivePrompt, negativePrompt, image_url }]
+      // Espera array: [{ positivePrompt, video_description, image_url }]
       if (Array.isArray(result) && result.length > 0) {
         const firstResult = result[0]
         setGeneratedResult(firstResult)
         setStatus('success')
-        setSuccessMessage('Short gerado com sucesso!')
+        setSuccessMessage('Imagem gerada com sucesso!')
       } else {
         throw new Error('Resposta inesperada do servidor')
       }
@@ -97,7 +98,42 @@ export default function GerarShortsPage() {
     } catch (error: any) {
       console.error('Erro ao processar:', error)
       setStatus('error')
-      setErrorMessage(error.message || 'Erro ao gerar short. Tente novamente.')
+      setErrorMessage(error.message || 'Erro ao gerar imagem. Tente novamente.')
+    }
+  }
+
+  const handleGenerateVideo = async () => {
+    if (!generatedResult) return
+
+    // BYPASS TEMPORÁRIO: Use test-user se não houver autenticação
+    const userId = user?.id || 'test-user'
+
+    try {
+      setStatus('processing')
+      setErrorMessage('')
+      setSuccessMessage('')
+
+      // Enviar para o webhook de geração de vídeo
+      const payload = {
+        generation_type: 'video',
+        video_description: generatedResult.video_description,
+        image_url: generatedResult.image_url,
+        user_id: userId,
+        opcoes: {
+          estilo: 'viral',
+          duracao: 30,
+        }
+      }
+
+      const result = await apiService.gerarShorts(payload)
+
+      setStatus('success')
+      setSuccessMessage('Vídeo enviado para geração! Aguarde o processamento.')
+
+    } catch (error: any) {
+      console.error('Erro ao processar:', error)
+      setStatus('error')
+      setErrorMessage(error.message || 'Erro ao gerar vídeo. Tente novamente.')
     }
   }
 
@@ -251,58 +287,63 @@ export default function GerarShortsPage() {
                 </div>
               </div>
 
-              {/* Negative Prompt */}
+              {/* Video Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Prompt Negativo</label>
+                <label className="text-sm font-medium text-gray-400">Descrição do Vídeo</label>
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.negativePrompt}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{generatedResult.video_description}</p>
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={status === 'processing'}
+                  className="py-3 px-6 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  Gerar Nova Imagem
+                </button>
+                <button
+                  onClick={handleGenerateVideo}
+                  disabled={status === 'processing'}
+                  className="py-3 px-6 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {status === 'processing' ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Upload className="w-5 h-5" />
+                  )}
+                  Gerar Vídeo
+                </button>
               </div>
             </div>
           )}
 
           {/* Generate Button */}
-          {selectedFile && (
+          {selectedFile && !generatedResult && (
             <button
-              onClick={handleUploadAndGenerate}
-              disabled={status === 'uploading' || status === 'processing'}
+              onClick={handleGenerateImage}
+              disabled={status === 'processing'}
               className={`
                 w-full mt-6 py-4 px-6 rounded-xl font-semibold text-white
                 transition-all duration-200 flex items-center justify-center gap-2
-                ${status === 'uploading' || status === 'processing'
+                ${status === 'processing'
                   ? 'bg-gray-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
                 }
               `}
             >
-              {status === 'uploading' && (
+              {status === 'processing' ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Fazendo upload...
+                  Gerando imagem...
                 </>
-              )}
-              {status === 'processing' && (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Gerando short...
-                </>
-              )}
-              {status === 'idle' && (
+              ) : (
                 <>
                   <ImageIcon className="w-5 h-5" />
-                  Gerar Short Viral
-                </>
-              )}
-              {status === 'success' && (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  Sucesso!
-                </>
-              )}
-              {status === 'error' && (
-                <>
-                  <XCircle className="w-5 h-5" />
-                  Tentar Novamente
+                  Gerar Imagem
                 </>
               )}
             </button>
